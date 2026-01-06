@@ -35,18 +35,30 @@ router.post("/", auth, upload.single("pdf"), async (req, res) => {
 ========================= */
 router.get("/", async (req, res) => {
   try {
-    const { university } = req.query;
+    const { university, subject, q } = req.query;
 
-    const sortOptions = {
-      uploaderRole: -1,
-      createdAt: -1
-    };
+    const filter = { status: "approved" };
 
     if (university) {
-      sortOptions.university = -1;
+      filter.university = new RegExp(university, "i");
     }
 
-    const notes = await Note.find({ status: "approved" }).sort(sortOptions);
+    if (subject) {
+      filter.subject = new RegExp(subject, "i");
+    }
+
+    if (q) {
+      filter.$or = [
+        { title: new RegExp(q, "i") },
+        { subject: new RegExp(q, "i") },
+        { university: new RegExp(q, "i") }
+      ];
+    }
+
+    const notes = await Note.find(filter).sort({
+      uploaderRole: -1,
+      createdAt: -1
+    });
 
     res.json(notes);
   } catch (err) {
@@ -54,7 +66,6 @@ router.get("/", async (req, res) => {
     res.status(500).json({ msg: "Failed to fetch notes" });
   }
 });
-
 
 /* =========================
    RATE NOTE (USER)
