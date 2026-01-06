@@ -8,7 +8,6 @@ import authRoutes from "./routes/auth.js";
 import notesRoutes from "./routes/notes.js";
 import adminRoutes from "./routes/admin.js";
 
-
 dotenv.config();
 
 /* =========================
@@ -22,15 +21,15 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "http://localhost:5173",              // local dev
+      "http://localhost:5173",
       "https://notes-platform-nine.vercel.app",
       "https://notes-platform-leaez808b-liebe16s-projects.vercel.app"
     ],
-    credentials: true
+    credentials: true,
   })
 );
+
 app.use(express.json());
-app.use("/api/admin", adminRoutes);
 
 /* =========================
    CLOUDINARY CONFIG
@@ -38,7 +37,7 @@ app.use("/api/admin", adminRoutes);
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_KEY,
-  api_secret: process.env.CLOUDINARY_SECRET
+  api_secret: process.env.CLOUDINARY_SECRET,
 });
 
 /* =========================
@@ -46,9 +45,9 @@ cloudinary.config({
 ========================= */
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
+  .then(() => console.log("✅ MongoDB Connected"))
   .catch((err) => {
-    console.error("MongoDB connection error:", err);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   });
 
@@ -57,9 +56,10 @@ mongoose
 ========================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", notesRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
-  res.send("Backend Running");
+  res.send("Backend Running 🚀");
 });
 
 /* =========================
@@ -68,8 +68,11 @@ app.get("/", (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
-  console.log("Cloudinary:", process.env.CLOUDINARY_NAME ? "READY" : "NOT READY");
+  console.log(`🚀 Server started on port ${PORT}`);
+  console.log(
+    "Cloudinary:",
+    process.env.CLOUDINARY_NAME ? "READY ✅" : "NOT READY ❌"
+  );
 });
 
 /* =========================
@@ -77,8 +80,7 @@ const server = app.listen(PORT, () => {
 ========================= */
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
-    console.error(`❌ Port ${PORT} is already in use`);
-    console.error("👉 Kill the process or change the port");
+    console.error(`❌ Port ${PORT} already in use`);
     process.exit(1);
   } else {
     console.error("Server error:", error);
