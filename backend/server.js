@@ -23,7 +23,6 @@ app.use(
     origin: [
       "http://localhost:5173",
       "https://notes-platform-nine.vercel.app",
-      "https://notes-platform-leaez808b-liebe16s-projects.vercel.app"
     ],
     credentials: true,
   })
