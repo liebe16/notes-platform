@@ -4,20 +4,10 @@ export default function Navbar() {
       <h1 className="font-bold text-lg">Notes Platform</h1>
 
       <div className="space-x-4">
-        <a href="/upload" className="hover:underline">
-          Upload
-        </a>
-        <a href="/admin" className="hover:underline">
-          Admin
-        </a>
+        <a href="/">Home</a>
+        <a href="/upload">Upload</a>
+        <a href="/admin">Admin</a>
       </div>
     </nav>
-  );
-}
-export default function Layout({ children }) {
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {children}
-    </div>
   );
 }
