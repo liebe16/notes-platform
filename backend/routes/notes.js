@@ -37,12 +37,16 @@ router.get("/", async (req, res) => {
   try {
     const { university } = req.query;
 
-    const notes = await Note.find({ status: "approved" })
-      .sort({
-        university: university ? -1 : 0,
-        uploaderRole: -1,
-        createdAt: -1
-      });
+    const sortOptions = {
+      uploaderRole: -1,
+      createdAt: -1
+    };
+
+    if (university) {
+      sortOptions.university = -1;
+    }
+
+    const notes = await Note.find({ status: "approved" }).sort(sortOptions);
 
     res.json(notes);
   } catch (err) {
@@ -50,6 +54,7 @@ router.get("/", async (req, res) => {
     res.status(500).json({ msg: "Failed to fetch notes" });
   }
 });
+
 
 /* =========================
    RATE NOTE (USER)
