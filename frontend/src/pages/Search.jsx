@@ -4,49 +4,98 @@ import NoteCard from "../components/NoteCard";
 
 export default function Search() {
   const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(false);
+
   const [q, setQ] = useState("");
   const [university, setUniversity] = useState("");
+  const [subject, setSubject] = useState("");
+  const [rating, setRating] = useState("");
+
+  const fetchNotes = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/notes", {
+        params: { q, university, subject, rating },
+      });
+      setNotes(res.data);
+    } catch (err) {
+      console.error("Failed to fetch notes", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    api
-      .get("/notes", {
-        params: { q, university }
-      })
-      .then(res => setNotes(res.data));
-  }, [q, university]);
+    fetchNotes();
+  }, []);
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      {/* HERO */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-2">
-          Find Study Notes from Top Universities
+    <div className="max-w-7xl mx-auto px-4">
+      {/* HERO SECTION */}
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-10 rounded-2xl shadow-lg mb-12 text-white">
+        <h1 className="text-4xl font-extrabold mb-4 leading-tight">
+          Best Platform for Notes & PYQs
         </h1>
-        <p className="text-gray-600">
-          Search by subject, topic or university
+
+        <p className="text-lg text-indigo-100 max-w-2xl mb-8">
+          Access verified study notes and previous year question papers from
+          top universities — uploaded by students and educators.
         </p>
+
+        {/* SEARCH FILTERS */}
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 bg-white p-4 rounded-xl">
+          <input
+            className="border p-2 rounded"
+            placeholder="Search topic"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <input
+            className="border p-2 rounded"
+            placeholder="University"
+            value={university}
+            onChange={(e) => setUniversity(e.target.value)}
+          />
+          <input
+            className="border p-2 rounded"
+            placeholder="Subject"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+          <select
+            className="border p-2 rounded"
+            value={rating}
+            onChange={(e) => setRating(e.target.value)}
+          >
+            <option value="">Min Rating</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+
+        <button
+          onClick={fetchNotes}
+          className="mt-6 bg-white text-indigo-600 font-semibold px-8 py-3 rounded-full hover:bg-indigo-50 transition"
+        >
+          Search Notes
+        </button>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="flex gap-4 mb-6">
-        <input
-          className="flex-1 border p-3 rounded"
-          placeholder="Search notes..."
-          value={q}
-          onChange={e => setQ(e.target.value)}
-        />
+      {/* STATES */}
+      {loading && (
+        <p className="text-center text-gray-600">Loading notes…</p>
+      )}
 
-        <input
-          className="border p-3 rounded"
-          placeholder="University"
-          value={university}
-          onChange={e => setUniversity(e.target.value)}
-        />
-      </div>
+      {!loading && notes.length === 0 && (
+        <p className="text-center text-gray-500">
+          No notes found. Try adjusting filters.
+        </p>
+      )}
 
-      {/* NOTES GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {notes.map(note => (
+      {/* RESULTS */}
+      <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-8">
+        {notes.map((note) => (
           <NoteCard key={note._id} note={note} />
         ))}
       </div>
