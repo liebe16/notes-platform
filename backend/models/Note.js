@@ -14,4 +14,14 @@ const noteSchema = new mongoose.Schema({
   }]
 }, { timestamps: true });
 
+noteSchema.virtual("avgRating").get(function () {
+  if (!this.ratings.length) return 0;
+  return (
+    this.ratings.reduce((a, r) => a + r.value, 0) /
+    this.ratings.length
+  );
+});
+
+noteSchema.set("toJSON", { virtuals: true });
+
 export default mongoose.model("Note", noteSchema);

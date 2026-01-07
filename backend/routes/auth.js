@@ -11,14 +11,11 @@ const router = express.Router();
 ========================= */
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, university, role } = req.body;
+    const { name, email, password, university } = req.body;
 
     if (!name || !email || !password || !university) {
       return res.status(400).json({ msg: "All fields are required" });
     }
-
-    // Prevent self-assigning admin
-    const safeRole = role === "teacher" ? "teacher" : "student";
 
     const existing = await User.findOne({ email });
     if (existing) {
@@ -27,12 +24,13 @@ router.post("/register", async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    await User.create({
+    // 🔒 Default role = user (admin must be set manually in DB)
+    const user = await User.create({
       name,
       email,
       password: hashed,
       university,
-      role: safeRole
+      role: "user"
     });
 
     res.json({ msg: "Registered successfully" });
@@ -69,15 +67,17 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    const safeUser = {
-      id: user._id,
-      name: user.name,
-      email: user.email,
+    // ✅ IMPORTANT: role is returned at top-level
+    res.json({
+      token,
       role: user.role,
-      university: user.university
-    };
-
-    res.json({ token, user: safeUser });
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        university: user.university
+      }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: "Login failed" });
@@ -89,7 +89,6 @@ router.post("/login", async (req, res) => {
 ========================= */
 router.get("/me", auth, (req, res) => {
   res.json({
-    msg: "Authorized",
     user: req.user
   });
 });

@@ -1,93 +1,53 @@
 import express from "express";
-import auth from "../middleware/auth.js";
-import upload from "../middleware/upload.js";
-import uploadPDF from "../utils/cloudinary.js";
+import multer from "multer";
 import Note from "../models/Note.js";
+import auth from "../middleware/auth.js";
 
 const router = express.Router();
 
 /* =========================
-   UPLOAD NOTE (USER)
+   MULTER CONFIG
+========================= */
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+/* =========================
+   CREATE NOTE (UPLOAD)
 ========================= */
 router.post("/", auth, upload.single("pdf"), async (req, res) => {
   try {
-    const cloud = await uploadPDF(req.file.buffer);
+    if (!req.file) {
+      return res.status(400).json({ msg: "PDF file required" });
+    }
+
+    const { title, subject } = req.body;
+
+    if (!title || !subject) {
+      return res.status(400).json({ msg: "Title & subject required" });
+    }
 
     const note = await Note.create({
-      title: req.body.title,
-      subject: req.body.subject,
-      university: req.user.university,
-      pdfUrl: cloud.secure_url,
+      title,
+      subject,
+      fileName: req.file.originalname,
+      fileBuffer: req.file.buffer,
       uploadedBy: req.user.id,
-      uploaderRole: req.user.role,
-      status: "pending"
+      approved: false
     });
 
-    res.json({ msg: "Uploaded for admin approval", note });
+    res.json({ msg: "Note submitted for approval" });
   } catch (err) {
-    console.error(err);
+    console.error("UPLOAD ERROR:", err);
     res.status(500).json({ msg: "Upload failed" });
   }
 });
 
 /* =========================
-   SEARCH / LIST NOTES (PUBLIC)
+   GET APPROVED NOTES
 ========================= */
 router.get("/", async (req, res) => {
-  try {
-    const { university, subject, q } = req.query;
-
-    const filter = { status: "approved" };
-
-    if (university) {
-      filter.university = new RegExp(university, "i");
-    }
-
-    if (subject) {
-      filter.subject = new RegExp(subject, "i");
-    }
-
-    if (q) {
-      filter.$or = [
-        { title: new RegExp(q, "i") },
-        { subject: new RegExp(q, "i") },
-        { university: new RegExp(q, "i") }
-      ];
-    }
-
-    const notes = await Note.find(filter).sort({
-      uploaderRole: -1,
-      createdAt: -1
-    });
-
-    res.json(notes);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ msg: "Failed to fetch notes" });
-  }
-});
-
-/* =========================
-   RATE NOTE (USER)
-========================= */
-router.post("/:id/rate", auth, async (req, res) => {
-  try {
-    const note = await Note.findById(req.params.id);
-
-    note.ratings = note.ratings.filter(
-      r => r.user.toString() !== req.user.id
-    );
-
-    note.ratings.push({
-      user: req.user.id,
-      value: req.body.value
-    });
-
-    await note.save();
-    res.json(note);
-  } catch (err) {
-    res.status(500).json({ msg: "Rating failed" });
-  }
+  const notes = await Note.find({ approved: true });
+  res.json(notes);
 });
 
 export default router;

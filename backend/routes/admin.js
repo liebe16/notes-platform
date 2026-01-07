@@ -1,6 +1,7 @@
 import express from "express";
 import auth from "../middleware/auth.js";
 import Note from "../models/Note.js";
+import User from "../models/User.js";
 
 const router = express.Router();
 
@@ -56,6 +57,24 @@ router.patch("/reject/:id", auth, isAdmin, async (req, res) => {
     res.json({ msg: "Note rejected" });
   } catch (err) {
     res.status(500).json({ msg: "Rejection failed" });
+  }
+});
+
+/* =========================
+   ADMIN ANALYTICS
+========================= */
+router.get("/stats", auth, isAdmin, async (req, res) => {
+  try {
+    const stats = {
+      totalNotes: await Note.countDocuments(),
+      approved: await Note.countDocuments({ status: "approved" }),
+      pending: await Note.countDocuments({ status: "pending" }),
+      users: await User.countDocuments()
+    };
+
+    res.json(stats);
+  } catch (err) {
+    res.status(500).json({ msg: "Failed to load stats" });
   }
 });
 
