@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import noteRoutes from "./routes/notes.js";
 import adminRoutes from "./routes/admin.js";
 
+
 dotenv.config();
 
 const app = express();
